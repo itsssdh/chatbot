@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#16121a; --bg2:#1d1824; --bg3:#261f30; --bg4:#2f273b;
+  --pink:#f4a7c3; --pink2:#e87fa8; --pink3:#ffd6e7;
+  --lav:#c9b8f0; --mint:#a8e6cf; --peach:#ffcba4;
+  --text:#f0eaf6; --text2:#b8a8cc; --text3:#6e5f82;
+  --border:#2e2540; --border2:#3d3350;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:800;}
+.logo-dot{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--lav));display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+.logo span{color:var(--pink);}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);font-family:'Fira Code',monospace;font-size:.7rem;color:var(--text2);}
+.status .dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
+.status.on .dot{background:var(--mint);box-shadow:0 0 6px var(--mint);}
+.status.on{color:var(--mint);border-color:rgba(168,230,207,.3);}
+.ch-pill{padding:3px 10px;border-radius:20px;background:rgba(244,167,195,.1);border:1px solid rgba(244,167,195,.25);font-family:'Fira Code',monospace;font-size:.7rem;color:var(--pink);}
+/* buttons */
+.btn{font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;padding:7px 16px;border-radius:20px;border:none;cursor:pointer;transition:all .15s;}
+.btn-pink{background:linear-gradient(135deg,var(--pink2),var(--lav));color:#1a1020;box-shadow:0 4px 14px rgba(244,167,195,.2);}
+.btn-pink:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(244,167,195,.35);}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:var(--pink);color:var(--pink);}
+.btn-sm{padding:4px 12px;font-size:.75rem;}
+.btn-xs{padding:3px 9px;font-size:.7rem;border-radius:12px;}
+/* layout */
+.main{display:flex;flex:1;overflow:hidden;}
+/* sidebar */
+.sidebar{width:190px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-section{padding:14px 10px 6px;}
+.sb-label{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:6px;}
+.nav{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;cursor:pointer;font-size:.86rem;font-weight:700;color:var(--text2);transition:all .12s;margin-bottom:2px;border:1px solid transparent;}
+.nav:hover{background:var(--bg3);color:var(--text);}
+.nav.active{background:rgba(244,167,195,.1);border-color:rgba(244,167,195,.2);color:var(--pink);}
+.stat{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin:3px 6px;}
+.stat-lbl{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--text3);}
+.stat-val{font-size:1.1rem;font-weight:800;}
+.sb-bot{margin-top:auto;padding:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+/* content */
+.content{flex:1;overflow-y:auto;padding:22px 26px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.pt{font-size:1.25rem;font-weight:800;}
+.ps{font-size:.78rem;color:var(--text3);font-family:'Fira Code',monospace;margin-top:3px;}
+/* cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.card-ttl{font-size:.88rem;font-weight:700;}
+/* forms */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fg label{font-family:'Fira Code',monospace;font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;}
+.fgrow{display:grid;gap:10px;margin-bottom:10px;}
+input,textarea,select{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:8px 11px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.84rem;width:100%;transition:border-color .15s;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(244,167,195,.5);box-shadow:0 0 0 3px rgba(244,167,195,.07);}
+select option{background:var(--bg2);}
+textarea{resize:vertical;min-height:60px;}
+.fa{display:flex;gap:8px;margin-top:8px;}
+/* add form */
+.add-form{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;display:none;}
+.add-form.open{display:block;}
+/* response rows */
+.rr{display:flex;gap:7px;align-items:center;margin-bottom:6px;}
+.rr input{flex:1;}
+/* cmd cards */
+.cmd-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:7px;transition:all .12s;}
+.cmd-card:hover{border-color:var(--border2);}
+.cmd-card.editing{border-color:rgba(244,167,195,.35);}
+.cmd-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cmd-trig{font-family:'Fira Code',monospace;font-size:.76rem;color:var(--pink3);background:rgba(244,167,195,.1);border:1px solid rgba(244,167,195,.2);padding:3px 9px;border-radius:7px;white-space:nowrap;}
+.cmd-resp{font-size:.81rem;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.cmd-acts{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;}
+.badge{font-family:'Fira Code',monospace;font-size:.64rem;padding:2px 7px;border-radius:7px;white-space:nowrap;}
+.bp{background:rgba(244,167,195,.1);color:var(--pink);border:1px solid rgba(244,167,195,.2);}
+.bl{background:rgba(201,184,240,.1);color:var(--lav);border:1px solid rgba(201,184,240,.2);}
+.bm{background:rgba(168,230,207,.1);color:var(--mint);border:1px solid rgba(168,230,207,.2);}
+.bpe{background:rgba(255,203,164,.1);color:var(--peach);border:1px solid rgba(255,203,164,.2);}
+.tog{width:34px;height:19px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--text3);transition:all .2s;}
+.tog.on{background:rgba(244,167,195,.2);border-color:rgba(244,167,195,.4);}
+.tog.on::after{left:17px;background:var(--pink);box-shadow:0 0 5px rgba(244,167,195,.5);}
+.ibtn{width:27px;height:27px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;font-size:.76rem;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .12s;}
+.ibtn:hover{border-color:var(--pink);color:var(--pink);}
+.ibtn.del:hover{border-color:rgba(255,100,100,.4);color:#ff6464;}
+.edit-form{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+/* tpl */
+.tpl{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:8px 11px;font-size:.84rem;outline:none;min-height:36px;transition:border-color .15s;font-family:'Nunito',sans-serif;}
+.tpl:focus{border-color:rgba(244,167,195,.5);}
+.vars{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.var{font-family:'Fira Code',monospace;font-size:.66rem;padding:2px 7px;border-radius:7px;cursor:pointer;background:rgba(201,184,240,.08);border:1px solid rgba(201,184,240,.18);color:var(--lav);transition:all .12s;}
+.var:hover{background:rgba(201,184,240,.18);}
+/* quotes */
+.q-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px;}
+.q-num{font-family:'Fira Code',monospace;font-size:.68rem;color:var(--pink);min-width:26px;padding-top:2px;}
+.q-txt{flex:1;font-size:.84rem;line-height:1.6;}
+.q-meta{font-family:'Fira Code',monospace;font-size:.68rem;color:var(--text3);margin-top:2px;}
+/* polls */
+.poll-bg{height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:4px;}
+.poll-fill{height:100%;background:linear-gradient(90deg,var(--pink2),var(--lav));border-radius:4px;transition:width .4s;}
+.poll-fill.lead{background:linear-gradient(90deg,var(--mint),#7fcfb0);}
+.dur{padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:700;background:var(--bg3);border:1px solid var(--border2);cursor:pointer;color:var(--text2);}
+.dur.active,.dur:hover{border-color:rgba(244,167,195,.4);color:var(--pink);background:rgba(244,167,195,.07);}
+/* emotes */
+.etag{font-family:'Fira Code',monospace;font-size:.66rem;padding:2px 7px;border-radius:7px;background:rgba(244,167,195,.06);border:1px solid rgba(244,167,195,.14);color:var(--text2);}
+/* chat */
+.chat{width:265px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;}
+.chat-hdr{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.chat-tabs{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);}
+.ctab{padding:7px 13px;font-size:.74rem;font-weight:700;color:var(--text3);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:'Nunito',sans-serif;}
+.ctab:hover{color:var(--text2);}
+.ctab.active{color:var(--pink);border-bottom-color:var(--pink);}
+.chat-wrap{flex:1;overflow:hidden;position:relative;}
+.chat-msgs{position:absolute;inset:0;overflow-y:auto;padding:9px 11px;display:flex;flex-direction:column;gap:4px;}
+.msg{font-size:.78rem;line-height:1.5;word-break:break-word;}
+.msg .u{font-weight:700;}
+.msg.bot{opacity:.8;}
+.msg.bot .u{color:var(--pink)!important;}
+.no-msg{text-align:center;padding:30px 10px;color:var(--text3);font-size:.76rem;line-height:1.9;}
+.chat-in{padding:9px 11px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.chat-in-row{display:flex;gap:5px;}
+.chat-in-row input{flex:1;font-size:.76rem;padding:5px 9px;}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(8,6,12,.82);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px;width:450px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal-ttl{font-size:1.15rem;font-weight:800;margin-bottom:4px;}
+.modal-sub{font-size:.79rem;color:var(--text3);margin-bottom:18px;line-height:1.7;}
+.steps{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:16px;}
+.steps ol{padding-left:16px;font-size:.79rem;color:var(--text2);line-height:2.1;}
+.steps a{color:var(--pink);text-decoration:none;}
+/* toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:11px;padding:9px 16px;font-size:.81rem;z-index:9999;transform:translateY(50px);opacity:0;transition:all .22s;pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast .td{width:6px;height:6px;border-radius:50%;background:var(--pink);flex-shrink:0;}
+.toast.err .td{background:#ff6464;}
+/* misc */
+.empty{text-align:center;padding:44px 20px;color:var(--text3);}
+.empty-i{font-size:2rem;margin-bottom:8px;opacity:.5;}
+.empty-t{font-size:.83rem;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px;}
+.ban-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.2);font-family:'Fira Code',monospace;font-size:.72rem;color:#ff8080;margin:3px;}
+.ban-tag button{background:none;border:none;cursor:pointer;color:#ff8080;font-size:.85rem;padding:0;line-height:1;opacity:.7;}
+.ban-tag button:hover{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-dot">🌸</div>Stream<span>Bot</span></div>
+  <div class="hdr-right">
+    <div id="chPills" style="display:flex;gap:6px;"></div>
+    <div class="status" id="statusEl"><div class="dot"></div><span id="statusTxt">offline</span></div>
+    <button class="btn btn-pink btn-sm" onclick="openModal()">+ Connect</button>
+  </div>
+</header>
+
+<div class="main">
+  <nav class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Panels</div>
+      <div class="nav active" onclick="showPanel('commands',this)">✨ Commands</div>
+      <div class="nav" onclick="showPanel('social',this)">🌸 Lurk & Social</div>
+      <div class="nav" onclick="showPanel('quotes',this)">💬 Quotes</div>
+      <div class="nav" onclick="showPanel('emotes',this)">😊 7TV Emotes</div>
+      <div class="nav" onclick="showPanel('polls',this)">📊 Polls</div>
+      <div class="nav" onclick="showPanel('banned',this)">🚫 Banned Users</div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Stats</div>
+      <div class="stat"><div class="stat-lbl">messages</div><div class="stat-val" style="color:var(--mint)" id="sMsgs">0</div></div>
+      <div class="stat"><div class="stat-lbl">commands</div><div class="stat-val" style="color:var(--pink)" id="sCmds">0</div></div>
+      <div class="stat"><div class="stat-lbl">quotes</div><div class="stat-val" id="sQuotes">0</div></div>
+    </div>
+    <div class="sb-bot">
+      <div class="sb-label" style="padding:0;margin-bottom:8px;">Spam</div>
+      <select id="spamChannel" style="font-size:.72rem;padding:5px 8px;margin-bottom:6px;"></select>
+      <textarea id="spamText" placeholder="Message to spam..." style="font-size:.76rem;padding:7px 9px;min-height:54px;margin-bottom:6px;resize:none;"></textarea>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <div class="fg" style="margin-bottom:0;flex:1;"><label>Interval (sec)</label><input type="number" id="spamInterval" value="5" min="0.05" max="120" step="0.05" style="padding:5px 8px;font-size:.76rem;" /></div>
+        <div class="fg" style="margin-bottom:0;justify-content:flex-end;"><label>&nbsp;</label><button class="btn btn-ghost btn-xs" onclick="document.getElementById('spamInterval').value=0.05" style="white-space:nowrap;">⚡ Max</button></div>
+      </div>
+      <button class="btn btn-pink btn-sm" id="spamBtn" onclick="toggleSpam()" style="width:100%;margin-bottom:6px;">▶ Start Spam</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportSettings()">⬇ Export</button>
+      <label class="btn btn-ghost btn-sm" style="text-align:center;cursor:pointer;">⬆ Import<input type="file" accept=".json" onchange="importSettings(event)" style="display:none"></label>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- COMMANDS -->
+    <div class="panel active" id="panel-commands">
+      <div class="ph">
+        <div><div class="pt">✨ Commands</div><div class="ps">custom chat commands</div></div>
+        <button class="btn btn-pink btn-sm" id="addToggleBtn" onclick="toggleAddForm()">+ Add Command</button>
+      </div>
+
+      <div class="add-form" id="addForm">
+        <div class="fgrow" style="grid-template-columns:1fr 1fr;">
+          <div class="fg"><label>Trigger</label><input type="text" id="iCmd" placeholder="!hello or hello" /></div>
+          <div class="fg"><label>Aliases (comma sep.)</label><input type="text" id="iAliases" placeholder="!hi, !hey" /></div>
+        </div>
+        <div class="fg">
+          <label>Responses — add multiple for random pick</label>
+          <div id="iRespList">
+            <div class="rr"><input type="text" id="iResp0" placeholder="Response — use {user} {channel} {count}" /><button class="ibtn del" onclick="removeRR(this)">✕</button></div>
+          </div>
+          <button class="btn btn-ghost btn-xs" style="margin-top:5px;width:fit-content;" onclick="addRR()">+ response</button>
+        </div>
+        <div class="fgrow" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="fg"><label>Permission</label>
+            <select id="iPerm"><option value="everyone">Everyone</option><option value="sub">Subs only</option><option value="mod">Mods only</option></select>
+          </div>
+          <div class="fg"><label>Cooldown (sec)</label><input type="number" id="iCooldown" value="0" min="0" /></div>
+          <div class="fg"><label>Delay (sec)</label><input type="number" id="iDelay" value="0" min="0" /></div>
+        </div>
+        <div class="fa">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddForm()">Cancel</button>
+          <button class="btn btn-pink btn-sm" onclick="addCommand()">Add Command</button>
+        </div>
+      </div>
+
+      <div id="cmdList"></div>
+    </div>
+
+    <!-- SOCIAL -->
+    <div class="panel" id="panel-social">
+      <div class="ph"><div><div class="pt">🌸 Lurk & Social</div><div class="ps">built-in command responses</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="card"><div class="card-hdr"><div class="card-ttl">👀 Lurk</div><div class="badge bm">!lurk</div></div>
+          <div class="tpl" contenteditable="true" id="tLurk">{user} is now lurking! 👀</div>
+          <div class="vars"><span class="var" onclick="insVar('tLurk','{user}')">{user}</span><span class="var" onclick="insVar('tLurk','{channel}')">{channel}</span></div>
+        </div>
+        <div class="card"><div class="card-hdr"><div class="card-ttl">🌅 Unlurk</div><div class="badge bm">!unlurk</div></div>
+          <div class="tpl" contenteditable="true" id="tUnlurk">{user} is back! 🎉</div>
+          <div class="vars"><span class="var" onclick="insVar('tUnlurk','{user}')">{user}</span></div>
+        </div>
+        <div class="card"><div class="card-hdr"><div class="card-ttl">📅 Followage</div><div class="badge bl">!followage</div></div>
+          <div class="tpl" contenteditable="true" id="tFollow">{user} has been following for {time}! ❤️</div>
+          <div class="vars"><span class="var" onclick="insVar('tFollow','{user}')">{user}</span><span class="var" onclick="insVar('tFollow','{time}')">{time}</span></div>
+        </div>
+        <div class="card"><div class="card-hdr"><div class="card-ttl">⏱ Uptime</div><div class="badge bl">!uptime</div></div>
+          <div class="tpl" contenteditable="true" id="tUptime">{channel} has been live for {uptime}! 🔴</div>
+          <div class="vars"><span class="var" onclick="insVar('tUptime','{channel}')">{channel}</span><span class="var" onclick="insVar('tUptime','{uptime}')">{uptime}</span></div>
+        </div>
+        <div class="card"><div class="card-hdr"><div class="card-ttl">📣 Shoutout</div><div class="badge bp">!so @user</div></div>
+          <div class="tpl" contenteditable="true" id="tSO">Go check out {user} at twitch.tv/{user} 🚀</div>
+          <div class="vars"><span class="var" onclick="insVar('tSO','{user}')">{user}</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-ttl">👋 Greeting</div><button class="tog on" id="togGreet" onclick="this.classList.toggle('on');saveTpls()"></button></div>
+          <div class="fg"><label>Trigger words</label><input type="text" id="greetWords" value="hi,hello,hey,hiya,sup,yo" onchange="saveTpls()" /></div>
+          <div class="tpl" contenteditable="true" id="tGreet">@{user} hey hey! 👋</div>
+          <div class="vars"><span class="var" onclick="insVar('tGreet','{user}')">{user}</span></div>
+        </div>
+        <div class="card" style="grid-column:span 2;">
+          <div class="card-hdr"><div class="card-ttl">🎉 Sub / Resub Alert</div><button class="tog on" id="togSub" onclick="this.classList.toggle('on');saveTpls()"></button></div>
+          <div class="tpl" contenteditable="true" id="tSub">Thank you @{user} for the {months} month sub! 🎉</div>
+          <div class="vars"><span class="var" onclick="insVar('tSub','{user}')">{user}</span><span class="var" onclick="insVar('tSub','{months}')">{months}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTES -->
+    <div class="panel" id="panel-quotes">
+      <div class="ph">
+        <div><div class="pt">💬 Quotes</div><div class="ps">!quote · !addquote [text] · !delquote [#]</div></div>
+        <button class="tog on" id="togQuotes" onclick="quotesOn=this.classList.toggle('on');saveAll()" style="transform:scale(1.25);margin-top:4px;"></button>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-hdr"><div class="card-ttl">Add Quote</div></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="qText" placeholder="Quote text..." style="flex:1;" />
+          <input type="text" id="qAuthor" placeholder="Author" style="width:120px;" />
+          <button class="btn btn-pink btn-sm" onclick="addQuoteManual()">Add</button>
+        </div>
+      </div>
+      <div id="quoteList"></div>
+    </div>
+
+    <!-- BANNED USERS -->
+    <div class="panel" id="panel-banned">
+      <div class="ph"><div><div class="pt">🚫 Banned Users</div><div class="ps">these users can't trigger any commands</div></div></div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-hdr"><div class="card-ttl">Ban a User</div></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="banInput" placeholder="Username..." style="flex:1;" onkeydown="if(event.key==='Enter')banUser()" />
+          <button class="btn btn-pink btn-sm" onclick="banUser()">Ban</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl">Banned Users</div><span id="banCount" class="badge bl">0</span></div>
+        <div id="banList"><div class="empty" style="padding:20px;"><div class="empty-t">No banned users</div></div></div>
+      </div>
+    </div>
+
+    <!-- EMOTES -->
+    <div class="panel" id="panel-emotes">
+      <div class="ph">
+        <div><div class="pt">😊 7TV Emotes</div><div class="ps">mirror emotes back in chat</div></div>
+        <button class="tog on" id="togEmotes" onclick="this.classList.toggle('on')" style="transform:scale(1.25);margin-top:4px;"></button>
+      </div>
+      <div id="emotePanel"></div>
+    </div>
+
+    <!-- POLLS -->
+    <div class="panel" id="panel-polls">
+      <div class="ph"><div><div class="pt">📊 Polls</div><div class="ps">viewers type 1, 2, 3... to vote</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card">
+          <div class="card-hdr"><div class="card-ttl">Create Poll</div></div>
+          <div class="fg"><label>Question</label><input type="text" id="pollQ" placeholder="What should I play next?" /></div>
+          <div class="fg">
+            <label>Options</label>
+            <div id="pollOpts">
+              <div class="rr"><input type="text" placeholder="Option 1" /><button class="ibtn del" onclick="this.parentElement.remove()">✕</button></div>
+              <div class="rr"><input type="text" placeholder="Option 2" /><button class="ibtn del" onclick="this.parentElement.remove()">✕</button></div>
+            </div>
+            <button class="btn btn-ghost btn-xs" style="margin-top:4px;" onclick="addPollOpt()">+ option</button>
+          </div>
+          <div class="fg"><label>Duration</label>
+            <div style="display:flex;gap:6px;">
+              <button class="dur active" data-v="60" onclick="selDur(this)">1m</button>
+              <button class="dur" data-v="120" onclick="selDur(this)">2m</button>
+              <button class="dur" data-v="300" onclick="selDur(this)">5m</button>
+              <button class="dur" data-v="600" onclick="selDur(this)">10m</button>
+            </div>
+          </div>
+          <button class="btn btn-pink" style="width:100%;" onclick="startPoll()">Start Poll</button>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-ttl">Live Results</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm" onclick="endPoll()">End</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearPoll()">Clear</button>
+            </div>
+          </div>
+          <div id="pollResults"><div class="empty"><div class="empty-i">📊</div><div class="empty-t">No active poll</div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="chat-hdr"><span>💬 chat</span><span id="vcCount" style="font-family:'Fira Code',monospace;font-size:.67rem;color:var(--text3);">—</span></div>
+    <div class="chat-tabs" id="chatTabs"></div>
+    <div class="chat-wrap">
+      <div id="chatMsgs" class="chat-msgs">
+        <div class="no-msg" id="noMsg">connect to a channel<br>to see live chat ✨</div>
+      </div>
+    </div>
+    <div class="chat-in">
+      <select id="sendCh" style="font-size:.74rem;padding:5px 8px;"></select>
+      <div class="chat-in-row">
+        <input type="text" id="chatInput" placeholder="send as bot..." onkeydown="if(event.key==='Enter')sendMsg()" />
+        <button class="btn btn-pink btn-sm" onclick="sendMsg()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-ttl">Connect to Twitch 🌸</div>
+    <div class="modal-sub">Set up your bot account to start responding in chat.</div>
+    <div class="steps"><ol>
+      <li>Create a separate bot Twitch account</li>
+      <li>Log in as the bot → go to <a href="https://twitchapps.com/tmi/" target="_blank">twitchapps.com/tmi</a></li>
+      <li>Copy the token (starts with <code style="color:var(--pink)">oauth:</code>)</li>
+      <li>Open via <code style="color:var(--mint)">python -m http.server</code> on localhost</li>
+    </ol></div>
+    <div class="fg"><label>Bot Username</label><input type="text" id="mUser" placeholder="your_bot_account" /></div>
+    <div class="fg"><label>OAuth Token</label><input type="password" id="mToken" placeholder="oauth:..." /></div>
+    <div class="fg"><label>Channels (comma separated)</label><input type="text" id="mChannels" placeholder="channel1, channel2" /></div>
+    <div class="fa" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-pink" onclick="connectBot()">Connect</button>
+      <button class="btn btn-ghost" onclick="startDemo()">Demo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="td"></div><span id="toastMsg"></span></div>
+
+<script>
+// ── STATE ──────────────────────────────────────
+var channels = {}, activeTab = null, botName = '', botToken = '';
+var greetedUsers = new Set();
+var msgCount = 0, cmdCount = 0;
+var pollData = null, pollTimer = null, pollDur = 60;
+var channelEmotes = {};
+var cooldowns = {};
+var spamTimer = null;
+var respCounter = 0; // unique id counter for response inputs
+
+// ── STORAGE ────────────────────────────────────
+function lsGet(k) { try { return localStorage.getItem('sb4_'+k); } catch(e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem('sb4_'+k, v); } catch(e) {} }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+
+var DEFAULT_CMDS = [
+  {id:uid(),cmd:'!gfuel',aliases:[],responses:['I\'m a G-Fuel partner! Use code "Cracked22" for 20% off! 🔥'],perm:'everyone',cooldown:0,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'go live',aliases:[],responses:['elisWakeUp'],perm:'mod',cooldown:0,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'!socials',aliases:[],responses:['Follow me on Twitter & Instagram @{channel} 📱'],perm:'everyone',cooldown:30,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'LOL',aliases:[],responses:['LOL'],perm:'everyone',cooldown:0,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'uh',aliases:[],responses:['uh'],perm:'everyone',cooldown:0,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'OOOO',aliases:[],responses:['OOOO'],perm:'everyone',cooldown:0,delay:0,enabled:true,counts:0},
+  {id:uid(),cmd:'!late',aliases:[],responses:['Cracked22 has been late {count} times since March 6th, 2026!'],perm:'everyone',cooldown:0,delay:0,enabled:true,counts:0},
+];
+
+var cmds = JSON.parse(lsGet('cmds') || 'null') || DEFAULT_CMDS;
+var quotes = JSON.parse(lsGet('quotes') || '[]');
+var tpls = JSON.parse(lsGet('tpls') || '{}');
+var greetOn = lsGet('greetOn') !== 'false';
+var subOn = lsGet('subOn') !== 'false';
+var quotesOn = lsGet('quotesOn') !== 'false';
+var bannedUsers = JSON.parse(lsGet('banned') || '[]');
+
+function saveAll() {
+  lsSet('cmds', JSON.stringify(cmds));
+  lsSet('quotes', JSON.stringify(quotes));
+  lsSet('tpls', JSON.stringify(tpls));
+  lsSet('greetOn', greetOn);
+  lsSet('subOn', subOn);
+  lsSet('quotesOn', quotesOn);
+  lsSet('banned', JSON.stringify(bannedUsers));
+}
+
+// ── INIT ───────────────────────────────────────
+window.onload = function() {
+  // load credentials
+  var creds = JSON.parse(lsGet('creds') || 'null');
+  if (creds) {
+    document.getElementById('mUser').value = creds.u || '';
+    document.getElementById('mToken').value = creds.t || '';
+    document.getElementById('mChannels').value = (creds.chs || []).join(', ');
+  }
+  // load templates
+  var tplIds = ['tLurk','tUnlurk','tFollow','tUptime','tSO','tGreet','tSub'];
+  tplIds.forEach(function(id) {
+    if (tpls[id]) document.getElementById(id).innerText = tpls[id];
+    document.getElementById(id).addEventListener('input', debounce(saveTpls, 600));
+  });
+  if (tpls.greetWords) document.getElementById('greetWords').value = tpls.greetWords;
+  document.getElementById('togGreet').classList.toggle('on', greetOn);
+  document.getElementById('togSub').classList.toggle('on', subOn);
+  document.getElementById('togQuotes').classList.toggle('on', quotesOn);
+  renderCmds();
+  renderQuotes();
+  renderBanned();
+  document.getElementById('sQuotes').textContent = quotes.length;
+};
+
+function debounce(fn, ms) { var t; return function() { var a=arguments; clearTimeout(t); t=setTimeout(function(){fn.apply(null,a);},ms); }; }
+
+function saveTpls() {
+  var ids = ['tLurk','tUnlurk','tFollow','tUptime','tSO','tGreet','tSub'];
+  ids.forEach(function(id) { tpls[id] = document.getElementById(id).innerText; });
+  tpls.greetWords = document.getElementById('greetWords').value;
+  greetOn = document.getElementById('togGreet').classList.contains('on');
+  subOn = document.getElementById('togSub').classList.contains('on');
+  saveAll();
+}
+
+// ── NAVIGATION ─────────────────────────────────
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'emotes') renderEmotePanel();
+}
+
+// ── MODAL ──────────────────────────────────────
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function connectBot() {
+  var user = document.getElementById('mUser').value.trim();
+  var token = document.getElementById('mToken').value.trim();
+  var chRaw = document.getElementById('mChannels').value.trim().toLowerCase();
+  if (!user || !token || !chRaw) { toast('Fill in all fields', true); return; }
+  if (!token.startsWith('oauth:')) { toast('Token must start with oauth:', true); return; }
+  var chs = chRaw.split(',').map(function(c){return c.trim();}).filter(Boolean);
+  botName = user.toLowerCase(); botToken = token;
+  lsSet('creds', JSON.stringify({u:user, t:token, chs:chs}));
+  closeModal();
+  chs.forEach(function(ch){ joinChannel(ch); });
+}
+
+function joinChannel(ch) {
+  if (channels[ch]) return;
+  toast('Connecting to #'+ch+'...');
+  try {
+    var ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+    channels[ch] = { ws:ws, connected:false };
+    ws.onopen = function() {
+      ws.send('CAP REQ :twitch.tv/commands twitch.tv/tags');
+      ws.send('PASS '+botToken);
+      ws.send('NICK '+botName);
+      ws.send('JOIN #'+ch);
+    };
+    ws.onmessage = function(e) { handleIRC(e.data, ch, ws); };
+    ws.onerror = function() { toast('Failed #'+ch, true); delete channels[ch]; };
+    ws.onclose = function() { if(channels[ch]){delete channels[ch]; updateUI();} };
+  } catch(e) { startDemo(); }
+}
+
+function handleIRC(raw, ch, ws) {
+  raw.split('\r\n').forEach(function(line) {
+    if (!line) return;
+    if (line.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); return; }
+    if (line.includes('366') || (line.includes('JOIN') && line.includes('#'+ch))) {
+      channels[ch].connected = true;
+      addChatTab(ch); updateUI();
+      toast('✅ Joined #'+ch);
+      load7TV(ch);
+      return;
+    }
+    var m = line.match(/:(.+?)!.+?@.+?\.tmi\.twitch\.tv PRIVMSG #(.+?) :(.+)/);
+    if (m) handleMsg(m[1], m[3], ch);
+  });
+}
+
+function updateUI() {
+  var chs = Object.keys(channels).filter(function(ch){return channels[ch].connected;});
+  var on = chs.length > 0;
+  var el = document.getElementById('statusEl');
+  el.classList.toggle('on', on);
+  document.getElementById('statusTxt').textContent = on ? 'online' : 'offline';
+  var pills = document.getElementById('chPills');
+  pills.innerHTML = chs.map(function(c){return '<div class="ch-pill">#'+c+'</div>';}).join('');
+  var sel = document.getElementById('sendCh');
+  sel.innerHTML = chs.map(function(c){return '<option value="'+c+'">#'+c+'</option>';}).join('');
+  if (activeTab) sel.value = activeTab;
+  var spamSel = document.getElementById('spamChannel');
+  spamSel.innerHTML = chs.map(function(c){return '<option value="'+c+'">#'+c+'</option>';}).join('');
+}
+
+// ── DEMO ───────────────────────────────────────
+var DU=['Fan99','CoolViewer','Gamer42','NightOwl','ChatPro'];
+var DM=['!gfuel','LOL','uh','OOOO','!socials','hi','PogChamp','KEKW','clip it','!lurk','!uptime','!late','hey','hello','hiya'];
+
+function startDemo() {
+  var ch='demo';
+  channels[ch]={ws:null,connected:true};
+  addChatTab(ch); updateUI();
+  document.getElementById('noMsg').style.display='none';
+  toast('🌸 Demo mode active');
+  setInterval(function(){
+    if(!channels[ch]) return;
+    handleMsg(DU[Math.floor(Math.random()*DU.length)], DM[Math.floor(Math.random()*DM.length)], ch);
+  }, 2000);
+}
+
+// ── MESSAGE HANDLING ───────────────────────────
+function handleMsg(user, text, ch) {
+  msgCount++;
+  document.getElementById('sMsgs').textContent = msgCount;
+  addToChat(user, text, false, ch);
+
+  // poll votes
+  if (pollData && pollData.active) {
+    var v = parseInt(text.trim());
+    if (v >= 1 && v <= pollData.opts.length) { pollData.opts[v-1].votes++; renderPollResults(); }
+  }
+
+  // banned user check — silently ignore all commands
+  if (bannedUsers.indexOf(user.toLowerCase()) >= 0) return;
+
+  // 7tv mirror
+  var t = text.trim();
+  if (document.getElementById('togEmotes').classList.contains('on') && !t.includes(' ') && channelEmotes[ch] && channelEmotes[ch].has(t)) {
+    setTimeout(function(){botSay(ch,t);}, 300);
+    return;
+  }
+
+  var lower = t.toLowerCase();
+  var parts = t.split(/\s+/);
+  var chName = ch.replace('#','');
+
+  // greeting
+  if (greetOn && !greetedUsers.has(user.toLowerCase())) {
+    var words2 = (tpls.greetWords || 'hi,hello,hey,hiya,sup,yo').split(',').map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+    var msgWords = lower.split(/\s+/);
+    if (msgWords.some(function(w){return words2.indexOf(w)>=0;})) {
+      greetedUsers.add(user.toLowerCase());
+      var gMsg = (tpls.tGreet || '@{user} hey hey! 👋').replace(/{user}/g, user);
+      setTimeout(function(){botSay(ch,gMsg);}, 400);
+      return;
+    }
+  }
+
+  // built-ins
+  if (lower==='!lurk'){setTimeout(function(){botSay(ch,(tpls.tLurk||'{user} is lurking! 👀').replace(/{user}/g,user).replace(/{channel}/g,chName));},400);return;}
+  if (lower==='!unlurk'){setTimeout(function(){botSay(ch,(tpls.tUnlurk||'{user} is back!').replace(/{user}/g,user));},400);return;}
+  if (lower==='!followage'){var mo=Math.floor(Math.random()*36)+1;setTimeout(function(){botSay(ch,(tpls.tFollow||'{user} followed for {time}!').replace(/{user}/g,user).replace(/{time}/g,mo+' months'));},400);return;}
+  if (lower==='!uptime'){setTimeout(function(){botSay(ch,(tpls.tUptime||'{channel} has been live!').replace(/{channel}/g,chName).replace(/{uptime}/g,'unknown'));},400);return;}
+  if (lower.startsWith('!so ')||lower.startsWith('!shoutout ')){var tgt=(parts[1]||'').replace('@','')||'unknown';setTimeout(function(){botSay(ch,(tpls.tSO||'Check out {user}!').replace(/{user}/g,tgt));},400);return;}
+
+  // !addquote
+  if (lower.startsWith('!addquote ')) {
+    if (!quotesOn) return;
+    var qtext = text.substring(10).trim();
+    if (qtext) { quotes.push({id:uid(),text:qtext,author:user,date:new Date().toLocaleDateString()}); saveAll(); renderQuotes(); botSay(ch,'Quote #'+quotes.length+' saved! 💬'); }
+    return;
+  }
+  // !quote
+  if (lower==='!quote'||lower.startsWith('!quote ')) {
+    if (!quotesOn) return;
+    if (!quotes.length){botSay(ch,'No quotes yet!');return;}
+    var qn=parseInt(parts[1]);
+    var q=(!isNaN(qn)&&qn>0&&qn<=quotes.length)?quotes[qn-1]:quotes[Math.floor(Math.random()*quotes.length)];
+    botSay(ch,'#'+(quotes.indexOf(q)+1)+': "'+q.text+'" — '+q.author);
+    return;
+  }
+  // !delquote
+  if (lower.startsWith('!delquote ')) {
+    if (!quotesOn) return;
+    var dn=parseInt(parts[1]);
+    if (!isNaN(dn)&&dn>0&&dn<=quotes.length){quotes.splice(dn-1,1);saveAll();renderQuotes();botSay(ch,'Quote #'+dn+' deleted.');}
+    return;
+  }
+
+  // custom commands
+  for (var i=0;i<cmds.length;i++) {
+    var c = cmds[i];
+    if (!c.enabled) continue;
+    var triggers = [c.cmd.toLowerCase()].concat((c.aliases||[]).map(function(a){return a.toLowerCase();}));
+    if (triggers.indexOf(lower) < 0) continue;
+    var now = Date.now();
+    if (c.cooldown>0 && cooldowns[c.id] && now-cooldowns[c.id] < c.cooldown*1000) continue;
+    cooldowns[c.id] = now;
+    c.counts = (c.counts||0)+1;
+    var resp = c.responses[Math.floor(Math.random()*c.responses.length)];
+    var outMsg = resp.replace(/{user}/g,user).replace(/{channel}/g,chName).replace(/{count}/g,c.counts);
+    var d = ((c.delay||0)*1000)+400;
+    (function(msg,delay){ setTimeout(function(){botSay(ch,msg);},delay); })(outMsg, d);
+    cmdCount++;
+    document.getElementById('sCmds').textContent = cmdCount;
+    saveAll(); renderCmds(); break;
+  }
+}
+
+function botSay(ch, msg) {
+  var ws = channels[ch] && channels[ch].ws;
+  if (ws) ws.send('PRIVMSG #'+ch+' :'+msg);
+  addToChat(botName||'StreamBot', msg, true, ch);
+}
+
+function addToChat(user, text, isBot, ch) {
+  ch = ch || activeTab || Object.keys(channels)[0];
+  if (!ch) return;
+  var container = document.getElementById('msgs-'+ch);
+  if (!container) return;
+  document.getElementById('noMsg').style.display = 'none';
+  var div = document.createElement('div');
+  div.className = 'msg' + (isBot ? ' bot' : '');
+  var palette = ['#ffb3c6','#ffd6a5','#caffbf','#a0c4ff','#bdb2ff','#ffc6ff'];
+  var col = palette[user.charCodeAt(0) % palette.length];
+  div.innerHTML = '<span class="u" style="color:'+col+'">'+esc(user)+'</span>: '+esc(text);
+  container.appendChild(div);
+  while (container.children.length > 100) container.removeChild(container.firstChild);
+  if (ch===activeTab) container.scrollTop = container.scrollHeight;
+}
+
+function sendMsg() {
+  var input = document.getElementById('chatInput');
+  var ch = document.getElementById('sendCh').value || activeTab;
+  var text = input.value.trim();
+  if (!text||!ch) return;
+  botSay(ch, text); input.value='';
+}
+
+// ── CHAT TABS ──────────────────────────────────
+function addChatTab(ch) {
+  if (document.getElementById('tab-'+ch)) return;
+  var tabs = document.getElementById('chatTabs');
+  var tab = document.createElement('button');
+  tab.className='ctab'; tab.id='tab-'+ch; tab.textContent='#'+ch;
+  tab.onclick=function(){switchTab(ch);};
+  tabs.appendChild(tab);
+  var wrap = document.querySelector('.chat-wrap');
+  var panel = document.createElement('div');
+  panel.id='msgs-'+ch; panel.className='chat-msgs'; panel.style.display='none';
+  wrap.appendChild(panel);
+  switchTab(ch);
+}
+function switchTab(ch) {
+  activeTab=ch;
+  document.querySelectorAll('.ctab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('[id^="msgs-"]').forEach(function(p){p.style.display='none';});
+  var tab=document.getElementById('tab-'+ch);
+  var panel=document.getElementById('msgs-'+ch);
+  if(tab) tab.classList.add('active');
+  if(panel){panel.style.display='flex';panel.scrollTop=panel.scrollHeight;}
+  var sel=document.getElementById('sendCh');
+  if(sel) sel.value=ch;
+}
+
+// ── COMMANDS ───────────────────────────────────
+function toggleAddForm() {
+  var form = document.getElementById('addForm');
+  form.classList.toggle('open');
+}
+
+function addRR() {
+  respCounter++;
+  var list = document.getElementById('iRespList');
+  var row = document.createElement('div');
+  row.className = 'rr';
+  row.innerHTML = '<input type="text" placeholder="Another response" /><button class="ibtn del" onclick="removeRR(this)">✕</button>';
+  list.appendChild(row);
+}
+
+function removeRR(btn) {
+  var list = document.getElementById('iRespList');
+  if (list.children.length <= 1) { toast('Need at least one response', true); return; }
+  btn.parentElement.remove();
+}
+
+function addCommand() {
+  var cmdVal = document.getElementById('iCmd').value.trim();
+  if (!cmdVal) { toast('Enter a trigger word or command', true); return; }
+
+  // collect all response inputs inside iRespList
+  var respInputs = document.getElementById('iRespList').getElementsByTagName('input');
+  var respArr = [];
+  for (var i=0; i<respInputs.length; i++) {
+    var v = respInputs[i].value.trim();
+    if (v) respArr.push(v);
+  }
+  if (respArr.length === 0) { toast('Enter at least one response', true); return; }
+
+  var aliasVal = document.getElementById('iAliases').value.trim();
+  var aliasArr = aliasVal ? aliasVal.split(',').map(function(a){return a.trim();}).filter(Boolean) : [];
+  var perm = document.getElementById('iPerm').value;
+  var cooldown = parseInt(document.getElementById('iCooldown').value) || 0;
+  var delay = parseInt(document.getElementById('iDelay').value) || 0;
+
+  cmds.push({ id:uid(), cmd:cmdVal, aliases:aliasArr, responses:respArr, perm:perm, cooldown:cooldown, delay:delay, enabled:true, counts:0 });
+  saveAll();
+  renderCmds();
+
+  // reset form
+  document.getElementById('iCmd').value = '';
+  document.getElementById('iAliases').value = '';
+  document.getElementById('iCooldown').value = '0';
+  document.getElementById('iDelay').value = '0';
+  document.getElementById('iRespList').innerHTML = '<div class="rr"><input type="text" placeholder="Response — use {user} {channel} {count}" /><button class="ibtn del" onclick="removeRR(this)">✕</button></div>';
+  document.getElementById('iPerm').value = 'everyone';
+  document.getElementById('addForm').classList.remove('open');
+  toast('✅ Command added!');
+}
+
+function renderCmds() {
+  var list = document.getElementById('cmdList');
+  document.getElementById('sQuotes').textContent = quotes.length;
+  if (!cmds.length) { list.innerHTML='<div class="empty"><div class="empty-i">✨</div><div class="empty-t">No commands yet</div></div>'; return; }
+  list.innerHTML = '';
+  cmds.forEach(function(c) {
+    var card = document.createElement('div');
+    card.className='cmd-card'; card.id='cmd-'+c.id;
+    var aliases=(c.aliases||[]).filter(Boolean);
+    var preview=c.responses.length>1?'['+c.responses.length+' responses] '+c.responses[0]:(c.responses[0]||'');
+    var aliasBadge=aliases.length?'<span class="badge bl">'+esc(aliases.join(', '))+'</span>':'';
+    var cdBadge=c.cooldown>0?'<span class="badge bpe">'+c.cooldown+'s</span>':'';
+    var dBadge=c.delay>0?'<span class="badge bl">+'+c.delay+'s</span>':'';
+    var permBadge='<span class="badge '+(c.perm==='mod'?'bl':c.perm==='sub'?'bpe':'bp')+'">'+c.perm+'</span>';
+    var respRows=(c.responses||['']).map(function(r){
+      return '<div class="rr"><input type="text" value="'+esc(r)+'" /><button class="ibtn del" onclick="removeEditRR(this,\''+c.id+'\')">✕</button></div>';
+    }).join('');
+    card.innerHTML=
+      '<div class="cmd-top">'+
+        '<div class="cmd-trig">'+esc(c.cmd)+'</div>'+
+        aliasBadge+
+        '<div class="cmd-resp">'+esc(preview)+'</div>'+
+        '<div class="cmd-acts">'+
+          cdBadge+dBadge+
+          '<span class="badge bm">'+( c.counts||0)+'</span>'+
+          permBadge+
+          '<button class="tog '+(c.enabled?'on':'')+'" onclick="toggleCmd(\''+c.id+'\',this)"></button>'+
+          '<button class="ibtn" onclick="openEdit(\''+c.id+'\')">✏️</button>'+
+          '<button class="ibtn" onclick="resetCount(\''+c.id+'\')">🔄</button>'+
+          '<button class="ibtn del" onclick="delCmd(\''+c.id+'\')">🗑</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="edit-form" id="edit-'+c.id+'">'+
+        '<div class="fgrow" style="grid-template-columns:1fr 1fr;margin-bottom:8px;">'+
+          '<div class="fg"><label>Trigger</label><input type="text" id="ec-cmd-'+c.id+'" value="'+esc(c.cmd)+'" /></div>'+
+          '<div class="fg"><label>Aliases</label><input type="text" id="ec-alias-'+c.id+'" value="'+esc((c.aliases||[]).join(', '))+'" /></div>'+
+        '</div>'+
+        '<div class="fg" style="margin-bottom:8px;"><label>Responses</label>'+
+          '<div id="ec-resps-'+c.id+'">'+respRows+'</div>'+
+          '<button class="btn btn-ghost btn-xs" style="margin-top:5px;width:fit-content;" onclick="addEditRR(\''+c.id+'\')">+ response</button>'+
+        '</div>'+
+        '<div class="fgrow" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:8px;">'+
+          '<div class="fg"><label>Permission</label><select id="ec-perm-'+c.id+'"><option value="everyone"'+(c.perm==='everyone'?' selected':'')+'>Everyone</option><option value="sub"'+(c.perm==='sub'?' selected':'')+'>Subs</option><option value="mod"'+(c.perm==='mod'?' selected':'')+'>Mods</option></select></div>'+
+          '<div class="fg"><label>Cooldown</label><input type="number" id="ec-cd-'+c.id+'" value="'+(c.cooldown||0)+'" min="0" /></div>'+
+          '<div class="fg"><label>Delay</label><input type="number" id="ec-delay-'+c.id+'" value="'+(c.delay||0)+'" min="0" /></div>'+
+        '</div>'+
+        '<div class="fa">'+
+          '<button class="btn btn-ghost btn-sm" onclick="closeEdit(\''+c.id+'\')">Cancel</button>'+
+          '<button class="btn btn-pink btn-sm" onclick="saveEdit(\''+c.id+'\')">Save</button>'+
+        '</div>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+function addEditRR(id) {
+  var list=document.getElementById('ec-resps-'+id);
+  var row=document.createElement('div'); row.className='rr';
+  row.innerHTML='<input type="text" placeholder="Another response" /><button class="ibtn del" onclick="removeEditRR(this,\''+id+'\')">✕</button>';
+  list.appendChild(row);
+}
+function removeEditRR(btn, id) {
+  var list=document.getElementById('ec-resps-'+id);
+  if(list.children.length<=1){toast('Need at least one',true);return;}
+  btn.parentElement.remove();
+}
+function openEdit(id){
+  document.querySelectorAll('.edit-form').forEach(function(f){f.style.display='none';});
+  document.querySelectorAll('.cmd-card').forEach(function(c){c.classList.remove('editing');});
+  document.getElementById('edit-'+id).style.display='block';
+  document.getElementById('cmd-'+id).classList.add('editing');
+}
+function closeEdit(id){document.getElementById('edit-'+id).style.display='none';document.getElementById('cmd-'+id).classList.remove('editing');}
+function saveEdit(id) {
+  var c=cmds.find(function(x){return x.id===id;}); if(!c) return;
+  var inputs=document.getElementById('ec-resps-'+id).getElementsByTagName('input');
+  var resps=[];
+  for(var i=0;i<inputs.length;i++){var v=inputs[i].value.trim();if(v)resps.push(v);}
+  if(!resps.length){toast('Need at least one response',true);return;}
+  c.cmd=document.getElementById('ec-cmd-'+id).value.trim();
+  c.aliases=document.getElementById('ec-alias-'+id).value.split(',').map(function(a){return a.trim();}).filter(Boolean);
+  c.responses=resps;
+  c.perm=document.getElementById('ec-perm-'+id).value;
+  c.cooldown=parseInt(document.getElementById('ec-cd-'+id).value)||0;
+  c.delay=parseInt(document.getElementById('ec-delay-'+id).value)||0;
+  saveAll(); renderCmds(); toast('✅ Saved!');
+}
+function toggleCmd(id,btn){var c=cmds.find(function(x){return x.id===id;});if(c){c.enabled=!c.enabled;btn.classList.toggle('on',c.enabled);saveAll();}}
+function delCmd(id){cmds=cmds.filter(function(c){return c.id!==id;});saveAll();renderCmds();toast('Deleted');}
+function resetCount(id){var c=cmds.find(function(x){return x.id===id;});if(c){c.counts=0;saveAll();renderCmds();toast('Count reset');}}
+
+// ── QUOTES ─────────────────────────────────────
+function renderQuotes(){
+  var list=document.getElementById('quoteList');
+  document.getElementById('sQuotes').textContent=quotes.length;
+  if(!quotes.length){list.innerHTML='<div class="empty"><div class="empty-i">💬</div><div class="empty-t">No quotes yet</div></div>';return;}
+  list.innerHTML=quotes.map(function(q,i){
+    return '<div class="q-card"><div class="q-num">#'+(i+1)+'</div><div style="flex:1;"><div class="q-txt">"'+esc(q.text)+'"</div><div class="q-meta">'+esc(q.author)+' · '+q.date+'</div></div><button class="ibtn del" onclick="delQuote('+i+')">🗑</button></div>';
+  }).join('');
+}
+function addQuoteManual(){
+  var text=document.getElementById('qText').value.trim();
+  var author=document.getElementById('qAuthor').value.trim()||'Manual';
+  if(!text){toast('Enter quote text',true);return;}
+  quotes.push({id:uid(),text:text,author:author,date:new Date().toLocaleDateString()});
+  saveAll();renderQuotes();
+  document.getElementById('qText').value='';document.getElementById('qAuthor').value='';
+  toast('💬 Quote saved!');
+}
+function delQuote(i){quotes.splice(i,1);saveAll();renderQuotes();toast('Quote deleted');}
+
+// ── 7TV ────────────────────────────────────────
+async function load7TV(ch){
+  try{
+    var r=await fetch('https://7tv.io/v3/users/twitch/'+ch);
+    if(!r.ok)throw new Error();
+    var d=await r.json();
+    var emotes=(d.emote_set&&d.emote_set.emotes)||[];
+    channelEmotes[ch]=new Set(emotes.map(function(e){return e.name;}));
+    if(emotes.length) toast('😊 Loaded '+emotes.length+' 7TV emotes for #'+ch);
+  }catch(e){channelEmotes[ch]=new Set();}
+}
+function renderEmotePanel(){
+  var el=document.getElementById('emotePanel');
+  var chs=Object.keys(channels);
+  if(!chs.length){el.innerHTML='<div class="empty"><div class="empty-t">Connect to a channel first</div></div>';return;}
+  el.innerHTML='';
+  chs.forEach(function(ch){
+    var card=document.createElement('div');card.className='card';card.style.marginBottom='10px';
+    var emotes=channelEmotes[ch];var count=emotes?emotes.size:0;
+    card.innerHTML='<div class="card-hdr"><div class="card-ttl" style="font-family:\'Fira Code\',monospace;">#'+ch+'</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<span style="font-size:.7rem;font-family:\'Fira Code\',monospace;color:'+(count>0?'var(--mint)':'var(--text3)')+';" id="es-'+ch+'">'+(count>0?count+' emotes':'not loaded')+'</span>'+
+        '<button class="btn btn-ghost btn-sm" onclick="refreshEmotes(\''+ch+'\')">Refresh</button>'+
+      '</div></div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;" id="eg-'+ch+'"></div>';
+    el.appendChild(card);
+    renderEmoteGrid(ch);
+  });
+}
+function renderEmoteGrid(ch){
+  var g=document.getElementById('eg-'+ch); if(!g) return;
+  var em=channelEmotes[ch];
+  if(!em||!em.size){g.innerHTML='<span style="font-size:.75rem;color:var(--text3);">Click Refresh to load emotes</span>';return;}
+  var arr=[...em].slice(0,60);
+  g.innerHTML=arr.map(function(n){return '<span class="etag">'+n+'</span>';}).join('');
+  if(em.size>60) g.innerHTML+='<span style="font-size:.72rem;color:var(--text3);">+'+( em.size-60)+' more</span>';
+}
+async function refreshEmotes(ch){
+  var s=document.getElementById('es-'+ch);if(s){s.style.color='var(--peach)';s.textContent='loading...';}
+  await load7TV(ch);
+  var em=channelEmotes[ch];var n=em?em.size:0;
+  if(s){s.style.color=n>0?'var(--mint)':'var(--text3)';s.textContent=n>0?n+' emotes':'not found on 7TV';}
+  renderEmoteGrid(ch);
+}
+
+// ── POLLS ──────────────────────────────────────
+function selDur(el){document.querySelectorAll('.dur').forEach(function(b){b.classList.remove('active');});el.classList.add('active');pollDur=parseInt(el.dataset.v);}
+function addPollOpt(){var o=document.getElementById('pollOpts');var n=o.children.length+1;var r=document.createElement('div');r.className='rr';r.innerHTML='<input type="text" placeholder="Option '+n+'" /><button class="ibtn del" onclick="this.parentElement.remove()">✕</button>';o.appendChild(r);}
+function startPoll(){
+  var q=document.getElementById('pollQ').value.trim();
+  var inputs=document.getElementById('pollOpts').getElementsByTagName('input');
+  var opts=[];for(var i=0;i<inputs.length;i++){var v=inputs[i].value.trim();if(v)opts.push(v);}
+  if(!q||opts.length<2){toast('Need a question and 2+ options',true);return;}
+  pollData={active:true,question:q,opts:opts.map(function(o){return{label:o,votes:0};}),timeLeft:pollDur};
+  renderPollResults();
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(function(){
+    if(!pollData||!pollData.active){clearInterval(pollTimer);return;}
+    pollData.timeLeft--;renderPollResults();
+    if(pollData.timeLeft<=0)endPoll();
+  },1000);
+  toast('📊 Poll started!');
+}
+function renderPollResults(){
+  var c=document.getElementById('pollResults');
+  if(!pollData){c.innerHTML='<div class="empty"><div class="empty-i">📊</div><div class="empty-t">No active poll</div></div>';return;}
+  var total=pollData.opts.reduce(function(s,o){return s+o.votes;},0)||1;
+  var max=Math.max.apply(null,pollData.opts.map(function(o){return o.votes;}));
+  var m=Math.floor(pollData.timeLeft/60),s=pollData.timeLeft%60;
+  var html='<div style="font-size:.88rem;font-weight:800;margin-bottom:4px;">'+esc(pollData.question)+'</div>'+
+    '<div style="font-size:.7rem;color:var(--text3);margin-bottom:12px;font-family:\'Fira Code\',monospace;">'+(pollData.active?m+':'+String(s).padStart(2,'0')+' left':'Ended')+'</div>';
+  pollData.opts.forEach(function(o,i){
+    var pct=Math.round((o.votes/total)*100);var lead=o.votes===max&&o.votes>0;
+    html+='<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:.81rem;"><span>'+(i+1)+'. '+esc(o.label)+(lead?' 🌸':'')+'</span><span style="font-family:\'Fira Code\',monospace;font-size:.7rem;color:var(--text2);">'+o.votes+' ('+pct+'%)</span></div>'+
+      '<div class="poll-bg"><div class="poll-fill'+(lead?' lead':'')+'" style="width:'+pct+'%"></div></div></div>';
+  });
+  c.innerHTML=html;
+}
+function endPoll(){if(!pollData)return;clearInterval(pollTimer);pollData.active=false;pollData.timeLeft=0;renderPollResults();toast('📊 Poll ended!');}
+function clearPoll(){clearInterval(pollTimer);pollData=null;renderPollResults();}
+
+// ── SOCIAL VARS ────────────────────────────────
+function insVar(elId,v){
+  var el=document.getElementById(elId);el.focus();
+  var sel=window.getSelection();var range=sel.rangeCount>0?sel.getRangeAt(0):null;
+  if(range&&el.contains(range.commonAncestorContainer)){range.deleteContents();range.insertNode(document.createTextNode(v));range.collapse(false);}
+  else{el.innerText+=v;}
+  saveTpls();
+}
+
+// ── EXPORT / IMPORT ────────────────────────────
+function exportSettings(){
+  var data={version:4,exported:new Date().toISOString(),cmds:cmds,quotes:quotes,tpls:tpls,greetOn:greetOn,subOn:subOn,quotesOn:quotesOn,banned:bannedUsers,creds:JSON.parse(lsGet('creds')||'null')};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='streambot-backup.json';a.click();URL.revokeObjectURL(url);
+  toast('✅ Exported!');
+}
+function importSettings(event){
+  var file=event.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(data.cmds)cmds=data.cmds;
+      if(data.quotes)quotes=data.quotes;
+      if(data.tpls)tpls=data.tpls;
+      if(data.banned)bannedUsers=data.banned;
+      if(data.creds)lsSet('creds',JSON.stringify(data.creds));
+      saveAll();renderCmds();renderQuotes();renderBanned();
+      var ids=['tLurk','tUnlurk','tFollow','tUptime','tSO','tGreet','tSub'];
+      ids.forEach(function(id){if(tpls[id])document.getElementById(id).innerText=tpls[id];});
+      toast('✅ Imported!');
+    }catch(e){toast('Invalid file',true);}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+// ── SPAM ───────────────────────────────────────
+function toggleSpam() {
+  if (spamTimer) {
+    clearInterval(spamTimer);
+    spamTimer = null;
+    var btn = document.getElementById('spamBtn');
+    btn.textContent = '▶ Start Spam';
+    btn.style.background = '';
+    toast('⏹ Spam stopped');
+  } else {
+    var ch = document.getElementById('spamChannel').value;
+    var msg = document.getElementById('spamText').value.trim();
+    var interval = Math.max(0.05, parseFloat(document.getElementById('spamInterval').value) || 5);
+    if (!ch) { toast('Connect to a channel first', true); return; }
+    if (!msg) { toast('Enter a message to spam', true); return; }
+    var btn = document.getElementById('spamBtn');
+    btn.textContent = '⏹ Stop Spam';
+    btn.style.background = 'linear-gradient(135deg,#ff6464,#ff9a9a)';
+    toast('▶ Spamming in #' + ch);
+    botSay(ch, msg);
+    spamTimer = setInterval(function() { botSay(ch, msg); }, interval * 1000);
+  }
+}
+
+// ── BANNED USERS ───────────────────────────────
+function banUser() {
+  var input = document.getElementById('banInput');
+  var name = input.value.trim().toLowerCase();
+  if (!name) { toast('Enter a username', true); return; }
+  if (bannedUsers.indexOf(name) >= 0) { toast(name + ' is already banned', true); return; }
+  bannedUsers.push(name);
+  saveAll(); renderBanned();
+  input.value = '';
+  toast('🚫 ' + name + ' banned');
+}
+function unbanUser(name) {
+  bannedUsers = bannedUsers.filter(function(u){return u !== name;});
+  saveAll(); renderBanned();
+  toast(name + ' unbanned');
+}
+function renderBanned() {
+  var list = document.getElementById('banList');
+  var count = document.getElementById('banCount');
+  if (!list) return;
+  count.textContent = bannedUsers.length;
+  if (!bannedUsers.length) { list.innerHTML = '<div class="empty" style="padding:20px;"><div class="empty-t">No banned users</div></div>'; return; }
+  list.innerHTML = '<div style="display:flex;flex-wrap:wrap;padding:4px 0;">' +
+    bannedUsers.map(function(u) {
+      return '<span class="ban-tag">' + esc(u) + '<button onclick="unbanUser(\'' + esc(u) + '\')">✕</button></span>';
+    }).join('') + '</div>';
+}
+
+// ── UTILS ──────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,isErr){
+  var t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.className='toast'+(isErr?' err':'');
+  t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);
+}
+</script>
+</body>
+</html>
